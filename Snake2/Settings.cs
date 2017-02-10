@@ -19,6 +19,7 @@ namespace Snake2
         public static int CircleHeight { get; set; }
         public static int Points { get; set; }
         public static int Score { get; set; }
+        public static bool GameOver { get; set; }
 
         public Settings()
         {
@@ -28,6 +29,7 @@ namespace Snake2
             CircleHeight = 15;
             Points = 100;
             Score = 0;
+            GameOver = false;
         }
         
     }

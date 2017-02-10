@@ -51,34 +51,50 @@ namespace Snake2
         // Update the picture box every tick.
         private void GameTimer_Tick(object sender, EventArgs e)
         {   
-            if (Input.KeyPressed(Keys.Right))
+            if(Settings.GameOver)
             {
-                //Debug.WriteLine("Right pressed");
-                Settings.direction = Direction.Right;
+                if(Input.KeyPressed(Keys.Enter))
+                {
+                    StartGame();
+                }
             }
-            else if (Input.KeyPressed(Keys.Left))
+            else
             {
-                //Debug.WriteLine("Left pressed");
-                Settings.direction = Direction.Left;
-            }
-            else if (Input.KeyPressed(Keys.Up))
-            {
-                //Debug.WriteLine("Up pressed");
-                Settings.direction = Direction.Up;
-            }
-            else if (Input.KeyPressed(Keys.Down))
-            {
-                //Debug.WriteLine("Down pressed");
-                Settings.direction = Direction.Down;
-            }
+                if (Input.KeyPressed(Keys.Right))
+                {
+                    //Debug.WriteLine("Right pressed");
+                    Settings.direction = Direction.Right;
+                }
+                else if (Input.KeyPressed(Keys.Left))
+                {
+                    //Debug.WriteLine("Left pressed");
+                    Settings.direction = Direction.Left;
+                }
+                else if (Input.KeyPressed(Keys.Up))
+                {
+                    //Debug.WriteLine("Up pressed");
+                    Settings.direction = Direction.Up;
+                }
+                else if (Input.KeyPressed(Keys.Down))
+                {
+                    //Debug.WriteLine("Down pressed");
+                    Settings.direction = Direction.Down;
+                }
 
-            MoveSnake();
-            
-            pbCanvas.Invalidate();
+                MoveSnake();
+
+                pbCanvas.Invalidate();
+            }
         }
 
         private void StartGame()
         {
+            //When starting a new game after dying
+            //Set things to default and clear the array
+            lblGameOver.Visible = false;
+            new Settings();
+            Snake.Clear();
+
             head.X = 5;
             head.Y = 5;
             Snake.Add(head);
@@ -109,11 +125,31 @@ namespace Snake2
                             break;
                     }
 
+                    // Get maximum X and Y position
+                    // Divide the width of picture box by the size of ball, since the call is moving in step of ball size.
+                    int maxXPos = pbCanvas.Size.Width / Settings.CircleWidth;
+                    int maxYPos = pbCanvas.Size.Height / Settings.CircleHeight;
+
+                    // Detect if the head meets the walls
+                    if (Snake[i].X < 0 || Snake[i].Y < 0 || Snake[i].X >= maxXPos || Snake[i].Y >= maxYPos)
+                    {
+                        Die();
+                    }
+
+                    // Detect if the head meets the body
+                    for (int j = 1; j < Snake.Count; j++)
+                    {
+                        if (Snake[j].X == Snake[i].X && Snake[j].Y == Snake[i].Y)
+                        {
+                            Die();
+                        }
+                    }
+
                     // Detect if the head meet the food
                     if (Snake[0].X == food.X && Snake[0].Y == food.Y)
                     {
                         Eat(); // eat food
-                    }
+                    }                    
                 }
                 else // else, it is the body
                 {
@@ -146,21 +182,36 @@ namespace Snake2
             GenerateFood();
         }
 
+        private void Die()
+        {
+            Settings.GameOver = true;
+        }
+
         private void pbCanvas_Paint(object sender, PaintEventArgs e)
         {
             Graphics canvas = e.Graphics;
             Brush SnakeColor = Brushes.White;
             Brush foodColor = Brushes.Red;
 
-            for (int i = 0; i < Snake.Count; i++)
+            if (!Settings.GameOver)
             {
-                // draw the snake on picture box
-                // Position = head.X * Settings.CircleWidth, so the snake move a multiple of the snake width
-                canvas.FillEllipse(SnakeColor, new Rectangle(Snake[i].X * Settings.CircleWidth, Snake[i].Y * Settings.CircleHeight, Settings.CircleWidth, Settings.CircleHeight));
+                for (int i = 0; i < Snake.Count; i++)
+                {
+                    // draw the snake on picture box
+                    // Position = head.X * Settings.CircleWidth, so the snake move a multiple of the snake width
+                    canvas.FillEllipse(SnakeColor, new Rectangle(Snake[i].X * Settings.CircleWidth, Snake[i].Y * Settings.CircleHeight, Settings.CircleWidth, Settings.CircleHeight));
+                }
+
+                // draw food on picture box
+                canvas.FillEllipse(foodColor, new Rectangle(food.X * Settings.CircleWidth, food.Y * Settings.CircleHeight, Settings.CircleWidth, Settings.CircleHeight));
+            }
+            else
+            {
+                string gameover = "GameOver!\nFinal Score: " + Settings.Score + "\nPress Enter for New Game.";
+                lblGameOver.Text = gameover;
+                lblGameOver.Visible = true;
             }
             
-            // draw food on picture box
-            canvas.FillEllipse(foodColor, new Rectangle(food.X * Settings.CircleWidth, food.Y * Settings.CircleHeight, Settings.CircleWidth, Settings.CircleHeight));
         }
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
@@ -171,6 +222,21 @@ namespace Snake2
         private void Form1_KeyUp(object sender, KeyEventArgs e)
         {
             Input.ChangeState(e.KeyCode, false);
+        }
+
+        private void newGameToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            StartGame();
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
+
+        private void aboutMeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("My name is Terri");
         }
     }
 }
